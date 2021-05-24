@@ -31,8 +31,12 @@ namespace GUI {
 class BrowserDialog;
 class CommandSender;
 class ListWidget;
+class ContainerWidget;
+class GameContainerWidget;
+class GridContainerWidget;
 class ButtonWidget;
 class PicButtonWidget;
+class GameThumbButton;
 class GraphicsWidget;
 class StaticTextWidget;
 class EditTextWidget;
@@ -58,6 +62,7 @@ public:
 	bool doGameDetection(const Common::String &path);
 protected:
 	EditTextWidget  *_searchWidget;
+	GridContainerWidget	*_grid;
 	ListWidget		*_list;
 	ButtonWidget	*_addButton;
 	Widget			*_startButton;
@@ -126,6 +131,24 @@ protected:
 	 */
 	void selectTarget(const String &target);
 private:
+	struct GameEntry {
+		GameEntry() : container(nullptr), button(nullptr), title(nullptr), language(nullptr), platform(nullptr) {}
+		GameEntry(GameContainerWidget *c, GameThumbButton *b, StaticTextWidget *t, StaticTextWidget *l, GraphicsWidget *p) : container(c), button(b), title(t), language(l), platform(p) {}
+
+		GameContainerWidget  *container;
+		GameThumbButton  *button;
+		StaticTextWidget *title;
+		StaticTextWidget *language;
+		GraphicsWidget 	 *platform;
+
+		void setVisible(bool state);
+	};
+	typedef Common::Array<GameEntry> EntryArray;
+	EntryArray _entries;
+
+	void destroyButtons();
+	void hideButtons();
+
 	bool checkModifier(int modifier);
 };
 
