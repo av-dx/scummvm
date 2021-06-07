@@ -142,15 +142,15 @@ ScriptManager::ScriptManager(AsylumEngine *engine) : _vm(engine) {
 	ADD_OPCODE(JumpIfActionTalk);
 	ADD_OPCODE(SetActionTalk);
 	ADD_OPCODE(ClearActionTalk);
-	ADD_OPCODE(AddReactionHive);
-	ADD_OPCODE(RemoveReactionHive);
-	ADD_OPCODE(HasMoreReaction);
+	ADD_OPCODE(AddToInventory);
+	ADD_OPCODE(RemoveFromInventory);
+	ADD_OPCODE(JumpIfInventoryOmits);
 	ADD_OPCODE(RunEncounter);
 	ADD_OPCODE(JumpIfAction16);
 	ADD_OPCODE(SetAction16);
 	ADD_OPCODE(ClearAction16);
-	ADD_OPCODE(SetActorField638);
-	ADD_OPCODE(JumpIfActorField638);
+	ADD_OPCODE(SelectInventoryItem);
+	ADD_OPCODE(JumpIfInventoryItemNotSelected);
 	ADD_OPCODE(ChangeScene);
 	ADD_OPCODE(UpdateActor);
 	ADD_OPCODE(PlayMovie);
@@ -853,26 +853,26 @@ END_OPCODE
 
 //////////////////////////////////////////////////////////////////////////
 // Opcode 0x22
-IMPLEMENT_OPCODE(AddReactionHive)
+IMPLEMENT_OPCODE(AddToInventory)
 	Actor *actor = getScene()->getActor(cmd->param3 ? cmd->param3 : _currentQueueEntry->actorIndex);
 
-	actor->addReactionHive(cmd->param1, cmd->param2);
+	actor->inventory.add(cmd->param1, cmd->param2);
 END_OPCODE
 
 //////////////////////////////////////////////////////////////////////////
 // Opcode 0x23
-IMPLEMENT_OPCODE(RemoveReactionHive)
+IMPLEMENT_OPCODE(RemoveFromInventory)
 	Actor *actor = getScene()->getActor(cmd->param3 ? cmd->param3 : _currentQueueEntry->actorIndex);
 
-	actor->removeReactionHive(cmd->param1, cmd->param2);
+	actor->inventory.remove(cmd->param1, cmd->param2);
 END_OPCODE
 
 //////////////////////////////////////////////////////////////////////////
 // Opcode 0x24
-IMPLEMENT_OPCODE(HasMoreReaction)
+IMPLEMENT_OPCODE(JumpIfInventoryOmits)
 	Actor *actor = getScene()->getActor(cmd->param4 ? cmd->param4 : _currentQueueEntry->actorIndex);
 
-	if (!actor->hasMoreReactions(cmd->param1, cmd->param3))
+	if (!actor->inventory.contains(cmd->param1, cmd->param3))
 		_currentQueueEntry->currentLine = cmd->param2;
 END_OPCODE
 
@@ -916,18 +916,18 @@ END_OPCODE
 
 //////////////////////////////////////////////////////////////////////////
 // Opcode 0x29
-IMPLEMENT_OPCODE(SetActorField638)
+IMPLEMENT_OPCODE(SelectInventoryItem)
 	Actor *actor = getScene()->getActor(cmd->param1);
 
-	actor->setField638(cmd->param2);
+	actor->inventory.selectItem(cmd->param2);
 END_OPCODE
 
 //////////////////////////////////////////////////////////////////////////
 // Opcode 0x2A
-IMPLEMENT_OPCODE(JumpIfActorField638)
+IMPLEMENT_OPCODE(JumpIfInventoryItemNotSelected)
 	Actor *actor = getScene()->getActor(cmd->param1);
 
-	if (actor->getField638() != cmd->param2)
+	if ((int32)actor->inventory.getSelectedItem() != cmd->param2)
 		_currentQueueEntry->currentLine = cmd->param3;
 END_OPCODE
 
@@ -1024,7 +1024,7 @@ IMPLEMENT_OPCODE(PlayMovie)
 
 		if (!getSharedData()->getMatteBarHeight()) {
 			getCursor()->hide();
-			getScreen()->loadPalette();
+			getScreen()->loadGrayPalette();
 			getSharedData()->setMatteVar1(1);
 			getSharedData()->setMatteBarHeight(1);
 			getSharedData()->setMatteVar2(0);
@@ -1187,7 +1187,7 @@ END_OPCODE
 // Opcode 0x3B
 IMPLEMENT_OPCODE(CreatePalette)
 	if (!cmd->param2) {
-		getScreen()->loadPalette();
+		getScreen()->loadGrayPalette();
 		cmd->param2 = 1;
 	}
 
@@ -1716,30 +1716,33 @@ END_OPCODE
 //////////////////////////////////////////////////////////////////////////
 // Opcode 0x56
 IMPLEMENT_OPCODE(Interact)
-	Actor *actor = getScene()->getActor(cmd->param2 == 2 ? getSharedData()->getPlayerIndex() : cmd->param1);
-
-	if (actor->getStatus() == kActorStatusWalkingTo || actor->getStatus() == kActorStatusWalkingTo2) {
-		if (cmd->param2 == 2)
-			_processNextEntry = true;
-
-		return;
-	}
+	Actor *player = getScene()->getActor(), *actor = getScene()->getActor((ActorIndex)cmd->param1);
 
 	if (cmd->param2 == 2) {
+		if (player->getStatus() == kActorStatusWalkingTo || player->getStatus() == kActorStatusWalkingTo2) {
+			_processNextEntry = true;
+
+			return;
+		}
+
 		cmd->param2 = 1;
 		_processNextEntry = false;
 
-		if ((actor->getPoint1()->x + actor->getPoint2()->x == cmd->param6) && (actor->getPoint1()->y + actor->getPoint2()->y == cmd->param7)) {
-			getScene()->getActor()->faceTarget((uint32)cmd->param1, kDirectionFromActor);
-			actor->updateFromDirection((ActorDirection)((actor->getDirection() + 4) & 7));
+		if ((player->getPoint1()->x + player->getPoint2()->x == cmd->param6)
+		 && (player->getPoint1()->y + player->getPoint2()->y == cmd->param7)) {
+			player->faceTarget((uint32)cmd->param1, kDirectionFromActor);
+			actor->updateFromDirection((ActorDirection)((player->getDirection() + 4) & 7));
 		} else {
 			_currentQueueEntry->currentLine = cmd->param3;
 		}
 	} else {
 		Common::Point point;
 
+		if (actor->getStatus() == kActorStatusWalkingTo || actor->getStatus() == kActorStatusWalkingTo2)
+			return;
+
 		if (actor->canInteract(&point, &cmd->param4)) {
-			getScene()->getActor()->processStatus(point.x, point.y, (bool)cmd->param4);
+			player->processStatus(point.x, point.y, (bool)cmd->param4);
 			cmd->param6 = point.x;
 			cmd->param7 = point.y;
 
@@ -1892,17 +1895,22 @@ END_OPCODE
 //////////////////////////////////////////////////////////////////////////
 // Opcode 0x63
 IMPLEMENT_OPCODE(UpdateGlobalFlags)
+	if (!_vm->sound()->isPlaying(getSpeech()->getSoundResourceId())) {
+		if (cmd->param1) {
+			getSharedData()->setFlag(kFlag1, false);
+			getSharedData()->setFlag(kFlag2, false);
+		} else {
+			cmd->param1 = 1;
+		}
+
+		return;
+	}
+
 	if (cmd->param1) {
 		getSharedData()->setFlag(kFlag1, true);
 		getSharedData()->setFlag(kFlag2, true);
 	}
-
-	if (_vm->sound()->isPlaying(getSpeech()->getSoundResourceId())) {
-		_processNextEntry = true;
-		return;
-	} else if (!cmd->param1) {
-		cmd->param1 = 1;
-	}
+	_processNextEntry = true;
 END_OPCODE
 
 //////////////////////////////////////////////////////////////////////////

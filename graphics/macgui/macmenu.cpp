@@ -890,7 +890,7 @@ void MacMenu::renderSubmenu(MacMenuSubMenu *menu, bool recursive) {
 	_screen.hLine(r->left + 3, r->bottom + 1, r->right + 1, _wm->_colorBlack);
 
 	int y = r->top + 1;
-	int x = _align == kTextAlignRight ? -kMenuWin95LeftDropdownPadding: kMenuWin95LeftDropdownPadding;
+	int x = _align == kTextAlignRight ? -_menuRightDropdownPadding: _menuLeftDropdownPadding;
 	x += r->left;
 
 	for (uint i = 0; i < menu->items.size(); i++) {
@@ -1038,6 +1038,15 @@ bool MacMenu::keyEvent(Common::Event &event) {
 	return false;
 }
 
+bool MacMenu::checkIntersects(Common::Rect &rect) {
+	if (_bbox.intersects(rect))
+		return true;
+	for (uint i = 0; i < _menustack.size(); i++)
+		if (_menustack[i]->bbox.intersects(rect))
+			return true;
+	return false;
+}
+
 bool MacMenu::mouseClick(int x, int y) {
 	if (_bbox.contains(x, y)) {
 		for (uint i = 0; i < _items.size(); i++) {
@@ -1052,6 +1061,7 @@ bool MacMenu::mouseClick(int x, int y) {
 
 						_menustack.pop_back(); // Drop previous submenu
 						_contentIsDirty = true;
+						_wm->setFullRefresh(true);
 					}
 				}
 

@@ -102,20 +102,6 @@ struct dbgChannelDesc {
 };
 
 
-// Debug channel lookup table for Debugger console
-static const dbgChannelDesc debugChannels[] = {
-	{"SCRIPTS", "Track script execution", DEBUG_SCRIPTS},
-	{"OPCODES", "Track opcode execution", DEBUG_OPCODES},
-	{"IMUSE", "Track iMUSE events", DEBUG_IMUSE},
-	{"RESOURCE", "Track resource loading/management", DEBUG_RESOURCE},
-	{"VARS", "Track variable changes", DEBUG_VARS},
-	{"ACTORS", "Actor-related debug", DEBUG_ACTORS},
-	{"SOUND", "Sound related debug", DEBUG_SOUND},
-	{"INSANE", "Track INSANE", DEBUG_INSANE},
-	{"SMUSH", "Track SMUSH", DEBUG_SMUSH},
-	{"MOONBASEAI", "Track Moonbase AI", DEBUG_MOONBASE_AI}
-};
-
 ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	: Engine(syst),
 	  _game(dr.game),
@@ -298,6 +284,9 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	_townsScreen = 0;
 	_scrollRequest = _scrollDeltaAdjust = 0;
 	_scrollDestOffset = _scrollTimer = 0;
+	_refreshNeedCatchUp = false;
+	memset(_refreshDuration, 0, sizeof(_refreshDuration));
+	_refreshArrayPos = 0;
 #ifdef USE_RGB_COLOR
 	_cjkFont = 0;
 #endif
@@ -618,10 +607,6 @@ ScummEngine::ScummEngine(OSystem *syst, const DetectorResult &dr)
 	if (_renderMode == Common::kRenderHercA || _renderMode == Common::kRenderHercG) {
 		_herculesBuf = (byte *)malloc(kHercWidth * kHercHeight);
 	}
-
-	// Add debug levels
-	for (int i = 0; i < ARRAYSIZE(debugChannels); ++i)
-		DebugMan.addDebugChannel(debugChannels[i].flag,  debugChannels[i].channel, debugChannels[i].desc);
 
 #ifndef DISABLE_HELP
 	// Create custom GMM dialog providing a help subdialog
@@ -1675,7 +1660,7 @@ void ScummEngine::resetScumm() {
 		delete _townsScreen;
 		_scrollRequest = _scrollDeltaAdjust = 0;
 		_scrollDestOffset = _scrollTimer = 0;
-		_townsScreen = new TownsScreen(_system, _screenWidth * _textSurfaceMultiplier, _screenHeight * _textSurfaceMultiplier, _outputPixelFormat);
+		_townsScreen = new TownsScreen(_system);
 		_townsScreen->setupLayer(0, 512, _screenHeight, _textSurfaceMultiplier, _textSurfaceMultiplier, (_outputPixelFormat.bytesPerPixel == 2) ? 32767 : 256);
 		_townsScreen->setupLayer(1, _screenWidth * _textSurfaceMultiplier, _screenHeight * _textSurfaceMultiplier, 1, 1, 16, _textPalette);
 	}
@@ -2282,10 +2267,9 @@ Common::Error ScummEngine::go() {
 		// before the main loop continues. We try to imitate that behaviour here to avoid glitches, but without making it
 		// overly complicated...
 		if (_scrollDeltaAdjust) {
-			int adj = MIN<int>(_scrollDeltaAdjust * 4 / 3 - _scrollDeltaAdjust, delta * 4 / 3 - delta);
-			delta += adj;
+			delta = MAX<int>(0, delta - _scrollDeltaAdjust) + (MIN<int>(_scrollDeltaAdjust, delta) << 2) / 3;
+			_scrollDeltaAdjust = 0;
 		}
-		_scrollDeltaAdjust = 0;
 #endif
 		if (delta < 1)	// Ensure we don't get into an endless loop
 			delta = 1;  // by not decreasing sleepers.
@@ -2345,10 +2329,21 @@ void ScummEngine::waitForTimer(int msec_delay) {
 		_sound->updateCD(); // Loop CD Audio if needed
 		parseEvents();
 
+#ifndef DISABLE_TOWNS_DUAL_LAYER_MODE
+		uint32 screenUpdateTimerStart = _system->getMillis();
 		towns_updateGfx();
+#endif
 		_system->updateScreen();
+		uint32 cur = _system->getMillis();
 
-		if (_system->getMillis() >= start_time + msec_delay)
+#ifndef DISABLE_TOWNS_DUAL_LAYER_MODE
+		// These measurements are used to determine whether the FM-Towns smooth scrolling is likely to fall behind and need to catch
+		// up (becoming more sloppy than smooth). Calls to _system->updateScreen() can require way longer than a 60Hz tick, depending
+		// on the hardware and the filter setting. In fact, these calls can take way over 100ms for some unfortunate configs.
+		_refreshDuration[_refreshArrayPos] = (int)(cur - screenUpdateTimerStart);
+		_refreshArrayPos = (_refreshArrayPos + 1) % ARRAYSIZE(_refreshDuration);
+#endif
+		if (cur >= start_time + msec_delay)
 			break;
 		_system->delayMillis(10);
 	}

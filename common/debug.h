@@ -25,6 +25,8 @@
 
 #include "common/scummsys.h"
 
+#include "engines/metaengine.h"
+
 #ifdef DISABLE_TEXT_CONSOLE
 
 inline void debug(const char *s, ...) {}
@@ -50,7 +52,7 @@ inline void debugCN(uint32 debugChannels, const char *s, ...) {}
  * Print a debug message to the text console (stdout).
  * Automatically appends a newline.
  */
-void debug(const char *s, ...) GCC_PRINTF(1, 2);
+void debug(MSVC_PRINTF const char *s, ...) GCC_PRINTF(1, 2);
 
 /**
  * Print a debug message to the text console (stdout), but only if
@@ -58,13 +60,13 @@ void debug(const char *s, ...) GCC_PRINTF(1, 2);
  * As a rule of thumb, the more important the message, the lower the level.
  * Automatically appends a newline.
  */
-void debug(int level, const char *s, ...) GCC_PRINTF(2, 3);
+void debug(int level, MSVC_PRINTF const char *s, ...) GCC_PRINTF(2, 3);
 
 /**
  * Print a debug message to the text console (stdout).
  * Does not append a newline.
  */
-void debugN(const char *s, ...) GCC_PRINTF(1, 2);
+void debugN(MSVC_PRINTF const char *s, ...) GCC_PRINTF(1, 2);
 
 /**
  * Print a debug message to the text console (stdout), but only if
@@ -72,7 +74,7 @@ void debugN(const char *s, ...) GCC_PRINTF(1, 2);
  * As a rule of thumb, the more important the message, the lower the level.
  * Does not append a newline.
  */
-void debugN(int level, const char *s, ...) GCC_PRINTF(2, 3);
+void debugN(int level, MSVC_PRINTF const char *s, ...) GCC_PRINTF(2, 3);
 
 /**
  * Print a debug message to the text console (stdout), but only if
@@ -86,7 +88,7 @@ void debugN(int level, const char *s, ...) GCC_PRINTF(2, 3);
  * @param debugChannels Bitfield of channels to check against.
  * @param s             Message to print.
  */
-void debugC(int level, uint32 debugChannels, const char *s, ...) GCC_PRINTF(3, 4);
+void debugC(int level, uint32 debugChannels, MSVC_PRINTF const char *s, ...) GCC_PRINTF(3, 4);
 
 /**
  * Print a debug message to the text console (stdout), but only if
@@ -101,7 +103,7 @@ void debugC(int level, uint32 debugChannels, const char *s, ...) GCC_PRINTF(3, 4
  * @param s             Message to print.
  *
  */
-void debugCN(int level, uint32 debugChannels, const char *s, ...) GCC_PRINTF(3, 4);
+void debugCN(int level, uint32 debugChannels, MSVC_PRINTF const char *s, ...) GCC_PRINTF(3, 4);
 
 /**
  * Print a debug message to the text console (stdout), but only if
@@ -112,7 +114,7 @@ void debugCN(int level, uint32 debugChannels, const char *s, ...) GCC_PRINTF(3, 
  * @param debugChannels Bitfield of channels to check against.
  * @param s             Message to print.
  */
-void debugC(uint32 debugChannels, const char *s, ...) GCC_PRINTF(2, 3);
+void debugC(uint32 debugChannels, MSVC_PRINTF const char *s, ...) GCC_PRINTF(2, 3);
 
 /**
  * Print a debug message to the text console (stdout), but only if
@@ -123,7 +125,7 @@ void debugC(uint32 debugChannels, const char *s, ...) GCC_PRINTF(2, 3);
  * @param debugChannels Bitfield of channels to check against.
  * @param s             Message to print.
  */
-void debugCN(uint32 debugChannels, const char *s, ...) GCC_PRINTF(2, 3);
+void debugCN(uint32 debugChannels, MSVC_PRINTF const char *s, ...) GCC_PRINTF(2, 3);
 
 #endif
 
@@ -160,7 +162,14 @@ extern bool gDebugChannelsOnly;
 
 /** Global constant for EventRecorder debug channel. */
 enum GlobalDebugLevels {
+	kDebugGlobalDetection = 1 << 29,
 	kDebugLevelEventRec = 1 << 30
+};
+
+static const DebugChannelDef globalDebugChannels[] = {
+	{kDebugLevelEventRec, "EventRec", "Event recorder debug level"},
+	{kDebugGlobalDetection, "Detection", "debug messages for advancedDetector"},
+	DEBUG_CHANNEL_END
 };
 
 /** @} */

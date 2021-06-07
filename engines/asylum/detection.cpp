@@ -23,7 +23,26 @@
 #include "engines/advancedDetector.h"
 #include "base/plugins.h"
 
-#include "asylum/detection_table.h"
+#include "asylum/detection_tables.h"
+#include "asylum/console.h"
+
+static const DebugChannelDef debugFlagList[] = {
+	{Asylum::kDebugLevelMain,      "Main",      "Generic debug level"},
+	{Asylum::kDebugLevelResources, "Resources", "Resources debugging"},
+	{Asylum::kDebugLevelSprites,   "Sprites",   "Sprites debugging"},
+	{Asylum::kDebugLevelInput,     "Input",     "Input events debugging"},
+	{Asylum::kDebugLevelMenu,      "Menu",      "Menu debugging"},
+	{Asylum::kDebugLevelScripts,   "Scripts",   "Scripts debugging"},
+	{Asylum::kDebugLevelSound,     "Sound",     "Sound debugging"},
+	{Asylum::kDebugLevelSavegame,  "Savegame",  "Saving & restoring game debugging"},
+	{Asylum::kDebugLevelScene,     "Scene",     "Scene process and draw debugging"},
+	{Asylum::kDebugLevelObjects,   "Objects",   "Debug Object objects"},
+	{Asylum::kDebugLevelActor,     "Actor",     "Debug Actor"},
+	{Asylum::kDebugLevelEncounter, "Encounter", "Debug Encounter"},
+	{Asylum::kDebugLevelVideo,     "Video",     "Debug Video"},
+	{Asylum::kDebugLevelCommands,  "Commands",  "Script commands debugging"},
+	DEBUG_CHANNEL_END
+};
 
 class AsylumMetaEngineDetection : public AdvancedMetaEngineDetection {
 public:
@@ -33,20 +52,24 @@ public:
 		_directoryGlobs = Asylum::directoryGlobs;
 	}
 
-	ADDetectedGame fallbackDetect(const FileMap &allFiles, const Common::FSList &fslist) const {
+	ADDetectedGame fallbackDetect(const FileMap &allFiles, const Common::FSList &fslist) const override {
 		return detectGameFilebased(allFiles, Asylum::fileBasedFallback);
 	}
 
-	const char *getEngineId() const {
+	const char *getEngineId() const override {
 		return "asylum";
 	}
 
-	const char *getName() const {
+	const char *getName() const override {
 		return "Sanitarium";
 	}
 
-	const char *getOriginalCopyright() const {
+	const char *getOriginalCopyright() const override {
 		return "Sanitarium (c) ASC Games";
+	}
+
+	const DebugChannelDef *getDebugChannels() const override {
+		return debugFlagList;
 	}
 };
 

@@ -63,6 +63,9 @@ namespace Common {
 class SeekableReadStream;
 class WriteStream;
 }
+namespace Graphics {
+class FontSJIS;
+}
 
 /**
  * This is the namespace of the SCUMM engine.
@@ -1372,6 +1375,9 @@ protected:
 	int _numCyclRects;
 	int _scrollRequest;
 	int _scrollDeltaAdjust;
+	int _refreshDuration[20];
+	int _refreshArrayPos;
+	bool _refreshNeedCatchUp;
 	uint32 _scrollTimer;
 	uint32 _scrollDestOffset;
 	uint16 _scrollFeedStrips[3];
