@@ -559,7 +559,7 @@ public:
 	void setActiveInstallation(int i) {setActiveInstallation(_installations[i]);};
 	void updateEntry();
 	void drawWidget() override;
-	void setEnabled(bool e);
+	// void setEnabled(bool e);
 
 };
 
