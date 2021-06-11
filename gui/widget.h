@@ -565,6 +565,7 @@ public:
 	void attachEntries(Common::Array<GridItemInfo> entry);
 	void setActiveEntry(int i) {setActiveEntry(_attachedEntries[i]);};
 	void update();
+	void updateThumb();
 	void drawWidget() override;
 	// void setEnabled(bool e);
 
