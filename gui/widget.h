@@ -491,7 +491,6 @@ private:
 	Common::Array<GridItemInfo> _allEntries;
 	Common::Array<GridItemInfo> _visibleEntries;
 	Common::HashMap<Common::String, Graphics::ManagedSurface *> _loadedSurfaces;
-	// Common::HashMap<Common::String, EntryContainerWidget *> _entryById;
 
 	Common::Array<Common::Array<GridItemWidget *>> _grid;
 
@@ -567,7 +566,6 @@ public:
 	void update();
 	void updateThumb();
 	void drawWidget() override;
-	// void setEnabled(bool e);
 
 };
 
