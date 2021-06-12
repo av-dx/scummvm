@@ -547,7 +547,7 @@ void DropdownButtonWidget::drawWidget() {
 
 #pragma mark -
 
-Graphics::ManagedSurface *scaleGfx(Graphics::ManagedSurface *gfx, int w, int h) {
+const Graphics::ManagedSurface *scaleGfx(Graphics::ManagedSurface *gfx, int w, int h) {
 	int nw = w, nh = h;
 
 	// Maintain aspect ratio
@@ -567,7 +567,7 @@ Graphics::ManagedSurface *scaleGfx(Graphics::ManagedSurface *gfx, int w, int h) 
 
 	Graphics::ManagedSurface tmp(*gfx);
 
-	Graphics::ManagedSurface *tmp2 = new Graphics::ManagedSurface(tmp.surfacePtr()->scale(w, h, false));
+	const Graphics::ManagedSurface *tmp2 = new Graphics::ManagedSurface(tmp.surfacePtr()->scale(w, h, false));
 	tmp.free();
 
 	return tmp2;
@@ -1030,7 +1030,7 @@ void GridItemWidget::setActiveEntry(GridItemInfo &entry) {
 }
 
 void GridItemWidget::updateThumb() {
-	Graphics::ManagedSurface *gfx = _grid->filenameToSurface(_activeEntry->thumbPath);
+	const Graphics::ManagedSurface *gfx = _grid->filenameToSurface(_activeEntry->thumbPath);
 	_thumb->setGfx(gfx);
 }
 
@@ -1044,7 +1044,7 @@ void GridItemWidget::update() {
 	_lang->setLabel(_activeEntry->language);
 	_title->setLabel(_activeEntry->title);
 	
-	Graphics::ManagedSurface *gfx;
+	const Graphics::ManagedSurface *gfx;
 
 	if (_activeEntry->platform == "pc")
 		gfx = _grid->platformToSurface(kPlatformDOS);
@@ -1085,10 +1085,6 @@ Graphics::ManagedSurface *loadSurfaceFromFile(Common::String &name) {
 			}
 			if (srcSurface && srcSurface->format.bytesPerPixel != 1) {
 				surf = new Graphics::ManagedSurface(srcSurface->convertTo(g_system->getOverlayFormat()));
-				Graphics::ManagedSurface *scSurf(scaleGfx(surf, kThumbnailWidth, 512));
-				surf->free();
-				delete surf;
-				return scSurf;
 			}
 				
 		} else {
@@ -1150,10 +1146,12 @@ void GridWidget::loadPlatformIcons() {
 	for (auto i = iconFilenames.begin(); i != iconFilenames.end(); ++i) {
 		Common::String fullPath = pathPrefix + (*i);
 		Graphics::ManagedSurface *gfx = loadSurfaceFromFile(fullPath);
-		Graphics::ManagedSurface *scGfx = scaleGfx(gfx, 32, 32);
-		_platformIcons.push_back(scGfx);
-		gfx->free();
-		delete gfx;
+		if (gfx) {
+			const Graphics::ManagedSurface *scGfx = scaleGfx(gfx, 32, 32);
+			_platformIcons.push_back(scGfx);
+			gfx->free();
+			delete gfx;
+		}
 	}
 }
 
@@ -1191,16 +1189,19 @@ void GridWidget::reloadThumbnails() {
 	for (Common::Array<GridItemInfo>::iterator iter = _visibleEntries.begin(); iter != _visibleEntries.end(); ++iter) {
 		path = Common::String("./icons/")+iter->thumbPath;
 		if (_loadedSurfaces.contains(path)) {
-			warning("Thumbnail already loaded, skipping...");
+			// warning("Thumbnail already loaded, skipping...");
 		}
 		else {
 			surf = loadSurfaceFromFile(path);
-			_loadedSurfaces[path] = surf;
+			if (surf) {
+				const Graphics::ManagedSurface *scSurf(scaleGfx(surf, kThumbnailWidth, 512));
+				_loadedSurfaces[path] = scSurf;
+			}
 		}
 	}
 }
 
-Graphics::ManagedSurface *GridWidget::filenameToSurface(Common::String &name) {
+const Graphics::ManagedSurface *GridWidget::filenameToSurface(Common::String &name) {
 	Common::String path = Common::String("./icons/")+name;
 	
 	for (auto l = _visibleEntries.begin(); l!=_visibleEntries.end(); ++l) {
@@ -1212,7 +1213,7 @@ Graphics::ManagedSurface *GridWidget::filenameToSurface(Common::String &name) {
 	return nullptr;
 }
 
-Graphics::ManagedSurface *GridWidget::platformToSurface(Platform platformCode) {
+const Graphics::ManagedSurface *GridWidget::platformToSurface(Platform platformCode) {
 	if ((platformCode == kPlatformUnknown) || (platformCode < 0 || platformCode >= _platformIcons.size())) {
 		warning("Unknown Platform");
 		return nullptr;
@@ -1238,7 +1239,7 @@ void GridWidget::handleMouseWheel(int x, int y, int direction) {
 		reloadThumbnails();
 	}
 
-	warning("%d %d", _visibleEntries.size(), _gridItems.size());
+	// warning("%d %d", _visibleEntries.size(), _gridItems.size());
 	Common::Array<GridItemInfo>::iterator eIter = _visibleEntries.begin();
 	Common::Array<GridItemWidget *>::iterator iter = _gridItems.begin() + (_firstVisibleItem % _gridItems.size());
 
