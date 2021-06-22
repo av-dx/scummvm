@@ -139,9 +139,6 @@ void LauncherDialog::build() {
 		new ButtonWidget(this, "Launcher.QuitButton", _("~Q~uit"), _("Quit ScummVM"), kQuitCmd);
 	new ButtonWidget(this, "Launcher.AboutButton", _("A~b~out..."), _("About ScummVM"), kAboutCmd);
 	new ButtonWidget(this, "Launcher.OptionsButton", _("~O~ptions..."), _("Change global ScummVM options"), kOptionsCmd);
-	_startButton =
-		new ButtonWidget(this, "Launcher.StartButton", _("~S~tart"), _("Start selected game"), kStartCmd);
-
 	DropdownButtonWidget *loadButton =
 	        new DropdownButtonWidget(this, "Launcher.LoadGameButton", _("~L~oad..."), _("Load saved game for selected game"), kLoadGameCmd);
 #ifdef ENABLE_EVENTRECORDER
@@ -156,8 +153,6 @@ void LauncherDialog::build() {
 		addButton->appendEntry(_("Mass Add..."), kMassAddGameCmd);
 		_addButton = addButton;
 
-		_editButton =
-			new ButtonWidget(this, "Launcher.EditGameButton", _("~E~dit Game..."), _("Change game options"), kEditGameCmd);
 		_removeButton =
 			new ButtonWidget(this, "Launcher.RemoveGameButton", _("~R~emove Game"), _("Remove game from the list. The game data files stay intact"), kRemoveGameCmd);
 	} else {
@@ -166,8 +161,6 @@ void LauncherDialog::build() {
 		addButton->appendEntry(_c("Mass Add...", "lowres"), kMassAddGameCmd);
 		_addButton = addButton;
 
-		_editButton =
-		new ButtonWidget(this, "Launcher.EditGameButton", _c("~E~dit Game...", "lowres"), _("Change game options"), kEditGameCmd);
 		_removeButton =
 		new ButtonWidget(this, "Launcher.RemoveGameButton", _c("~R~emove Game", "lowres"), _("Remove game from the list. The game data files stay intact"), kRemoveGameCmd);
 	}
@@ -741,14 +734,6 @@ void LauncherDialog::handleCommand(CommandSender *sender, uint32 cmd, uint32 dat
 
 void LauncherDialog::updateButtons() {
 	bool enable = (_list->getSelected() >= 0);
-	if (enable != _startButton->isEnabled()) {
-		_startButton->setEnabled(enable);
-		_startButton->markAsDirty();
-	}
-	if (enable != _editButton->isEnabled()) {
-		_editButton->setEnabled(enable);
-		_editButton->markAsDirty();
-	}
 	if (enable != _removeButton->isEnabled()) {
 		_removeButton->setEnabled(enable);
 		_removeButton->markAsDirty();
