@@ -318,6 +318,7 @@ void LauncherDialog::updateListing() {
 
 	Common::Array<GridItemInfo> gridList;
 
+	int k = 0;
 	for (Common::Array<LauncherEntry>::const_iterator iter = domainList.begin(); iter != domainList.end(); ++iter) {
 		Common::String entryid = iter->key;
 		Common::String gameid = iter->domain->getVal("gameid");
@@ -328,7 +329,7 @@ void LauncherDialog::updateListing() {
 		iter->domain->tryGetVal("engineid", engineid);
 		iter->domain->tryGetVal("language",language);
 		iter->domain->tryGetVal("platform", platform);
-		gridList.push_back(GridItemInfo(entryid, engineid, gameid, title, language, platform));
+		gridList.push_back(GridItemInfo(k++, engineid, gameid, title, language, platform));
 	}
 
 	_grid->setEntryList(&gridList);
@@ -670,6 +671,9 @@ bool LauncherDialog::doGameDetection(const Common::String &path) {
 
 void LauncherDialog::handleCommand(CommandSender *sender, uint32 cmd, uint32 data) {
 	int item = _list->getSelected();
+	if (data) {
+		item = data;
+	}
 
 	switch (cmd) {
 	case kAddGameCmd:
