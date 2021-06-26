@@ -61,7 +61,7 @@ public:
 	bool doGameDetection(const Common::String &path);
 protected:
 	EditTextWidget  *_searchWidget;
-	GridWidget	*_grid;
+	GridWidget		*_grid;
 	ListWidget		*_list;
 	ButtonWidget	*_addButton;
 	Widget			*_startButton;
@@ -79,6 +79,7 @@ protected:
 	SaveLoadChooser	*_loadDialog;
 
 	String _search;
+	int _libraryDisplay;
 
 	void reflowLayout() override;
 
