@@ -112,9 +112,9 @@ protected:
 	 * Fill the list widget with all currently configured targets, and trigger
 	 * a redraw.
 	 */
-	virtual void updateListing();
+	virtual void updateListing() = 0;
 
-	virtual void updateButtons();
+	virtual void updateButtons() = 0;
 
 	virtual void build();
 	void clean();
@@ -154,9 +154,9 @@ protected:
 	 *
 	 * @target	name of target to select
 	 */
-	virtual void selectTarget(const String &target);
+	virtual void selectTarget(const String &target) = 0;
 
-	virtual int getSelected();
+	virtual int getSelected() = 0;
 private:
 
 	bool checkModifier(int modifier);
