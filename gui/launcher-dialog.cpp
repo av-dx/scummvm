@@ -218,6 +218,14 @@ void LauncherDialog::open() {
 }
 
 void LauncherDialog::close() {
+	// Save last selection
+	const int sel = getSelected();
+	if (sel >= 0)
+		ConfMan.set("lastselectedgame", _domains[sel], ConfigManager::kApplicationDomain);
+	else
+		ConfMan.removeKey("lastselectedgame", ConfigManager::kApplicationDomain);
+
+	ConfMan.flushToDisk();
 	Dialog::close();
 }
 
@@ -232,6 +240,7 @@ void LauncherDialog::handleCommand(CommandSender *sender, uint32 cmd, uint32 dat
 void LauncherDialog::updateListing() {}
 void LauncherDialog::updateButtons() {}
 void LauncherDialog::selectTarget(const Common::String &target) {}
+int LauncherDialog::getSelected() { return 0; }
 
 #ifndef DISABLE_LAUNCHERDISPLAY_GRID
 void LauncherDialog::addChooserButtons() {
@@ -585,6 +594,8 @@ void LauncherSimple::selectTarget(const String &target) {
 	}
 }
 
+int LauncherSimple::getSelected() { return _list->getSelected(); }
+
 void LauncherSimple::build() {
 #ifndef DISABLE_FANCY_THEMES
 	_logo = nullptr;
@@ -672,18 +683,6 @@ void LauncherSimple::build() {
 
 	// Create Load dialog
 	_loadDialog = new SaveLoadChooser(_("Load game:"), _("Load"), false);
-}
-
-void LauncherSimple::close() {
-	// Save last selection
-	const int sel = _list->getSelected();
-	if (sel >= 0)
-		ConfMan.set("lastselectedgame", _domains[sel], ConfigManager::kApplicationDomain);
-	else
-		ConfMan.removeKey("lastselectedgame", ConfigManager::kApplicationDomain);
-
-	ConfMan.flushToDisk();
-	Dialog::close();
 }
 
 void LauncherSimple::updateListing() {
@@ -1096,18 +1095,6 @@ void LauncherGrid::reflowLayout() {
 	Dialog::reflowLayout();
 }
 
-void LauncherGrid::close() {
-	// Save last selection
-	int sel = _grid->getSelected();
-	if (sel >= 0)
-		ConfMan.set("lastselectedgame", _domains[sel], ConfigManager::kApplicationDomain);
-	else
-		ConfMan.removeKey("lastselectedgame", ConfigManager::kApplicationDomain);
-		
-	ConfMan.flushToDisk();
-	Dialog::close();
-}
-
 void LauncherGrid::updateListing() {
 	// Retrieve a list of all games defined in the config file
 	_domains.clear();
@@ -1181,6 +1168,7 @@ void LauncherGrid::updateButtons() {
 }
 
 void LauncherGrid::selectTarget(const String &target) {}
+int LauncherGrid::getSelected() { return 0; }
 
 void LauncherGrid::build() {
 	_grid = nullptr;

@@ -152,6 +152,8 @@ protected:
 	 * @target	name of target to select
 	 */
 	virtual void selectTarget(const String &target);
+
+	virtual int getSelected();
 private:
 
 	bool checkModifier(int modifier);
@@ -175,12 +177,11 @@ public:
 	LauncherDisplayType getType() const override { return kLauncherDisplayList; }
 	#endif // !DISABLE_LAUNCHERDISPLAY_GRID
 
-	void close() override;
-
 protected:
 	void updateListing() override;
 	void updateButtons() override;
 	void selectTarget(const String &target) override;
+	int getSelected() override;
 	void build() override;
 private:
 	ListWidget 		*_list;
@@ -212,12 +213,11 @@ public:
 
 	LauncherDisplayType getType() const override { return kLauncherDisplayGrid; }
 
-	void close() override;
-
 protected:
 	void updateListing() override;
 	void updateButtons() override;
 	void selectTarget(const String &target) override;
+	int getSelected() override;
 	void build() override;
 private:
 	GridWidget		*_grid;
