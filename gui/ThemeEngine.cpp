@@ -2099,7 +2099,7 @@ Common::Rect ThemeEngine::swapClipRect(const Common::Rect &newRect) {
 	return oldRect;
 }
 
-Common::Rect ThemeEngine::getClipRect() {
+const Common::Rect ThemeEngine::getClipRect() {
 	return _clip;
 }
 
