@@ -590,7 +590,6 @@ void LauncherDialog::handleCommand(CommandSender *sender, uint32 cmd, uint32 dat
 	}
 }
 
-
 void LauncherDialog::reflowLayout() {
 	if (getType() == kLauncherDisplayGrid && !g_gui.xmlEval()->getVar("Globals.GridSupported", 0)) {
 		setResult(kSwitchLauncherDialog);
@@ -737,7 +736,7 @@ void LauncherChooser::selectLauncher() {
 		case kLauncherDisplayGrid:
 			_impl = new LauncherGrid(Common::U32String("LauncherGrid"));
 			break;
-		
+
 		default:
 			// fallthrough intended
 		case kLauncherDisplayList:
@@ -753,7 +752,7 @@ void LauncherChooser::selectLauncher() {
 int LauncherChooser::runModal() {
 	if (!_impl)
 		return -1;
-	
+
 	int ret;
 	do {
 		ret = _impl->run();
@@ -769,8 +768,8 @@ int LauncherChooser::runModal() {
 LauncherSimple::LauncherSimple(const U32String &title)
 	: LauncherDialog(title), 
 	_list (nullptr), _addButton(nullptr), _startButton(nullptr),
-	_loadButton(nullptr), _editButton(nullptr),	_removeButton(nullptr) {
-	
+	_loadButton(nullptr), _editButton(nullptr), _removeButton(nullptr) {
+
 	build();
 }
 
@@ -1028,8 +1027,8 @@ void LauncherSimple::updateButtons() {
 LauncherGrid::LauncherGrid(const U32String &title)
 	: LauncherDialog(title), 
 	_grid (nullptr), _addButton(nullptr), _startButton(nullptr),
-	_loadButton(nullptr), _editButton(nullptr),	_removeButton(nullptr) {
-	
+	_loadButton(nullptr), _editButton(nullptr), _removeButton(nullptr) {
+
 	build();
 }
 
@@ -1047,7 +1046,7 @@ void LauncherGrid::handleKeyDown(Common::KeyState state) {
 }
 
 void LauncherGrid::handleCommand(CommandSender *sender, uint32 cmd, uint32 data) {
-	
+
 	switch (cmd) {
 	case kPlayButtonCmd:
 	case kItemDoubleClickedCmd:
@@ -1099,7 +1098,7 @@ void LauncherGrid::updateListing() {
 		size_t extraPos = description.findFirstOf("(");
 		if (extraPos != Common::String::npos)
 			description = Common::String(description.c_str(), extraPos);
-			
+
 		if (!description.empty())
 			domainList.push_back(LauncherEntry(iter->_key, description, &iter->_value));
 	}
@@ -1118,7 +1117,7 @@ void LauncherGrid::updateListing() {
 		Common::String language = "XX";
 		Common::String platform;
 		iter->domain->tryGetVal("engineid", engineid);
-		iter->domain->tryGetVal("language",language);
+		iter->domain->tryGetVal("language", language);
 		iter->domain->tryGetVal("platform", platform);
 		gridList.push_back(GridItemInfo(k++, engineid, gameid, title, Common::parseLanguage(language), Common::parsePlatform(platform)));
 	}
@@ -1177,7 +1176,7 @@ void LauncherGrid::build() {
 			new DropdownButtonWidget(this, "LauncherGrid.AddGameButton", _c("~A~dd Game...", "lowres"), _("Add games to the list"), kAddGameCmd);
 		addButton->appendEntry(_c("Mass Add...", "lowres"), kMassAddGameCmd);
 		_addButton = addButton;
-		
+
 		_removeButton =
 		new ButtonWidget(this, "LauncherGrid.RemoveGameButton", _c("~R~emove Game", "lowres"), _("Remove game from the list. The game data files stay intact"), kRemoveGameCmd);
 	}
@@ -1200,7 +1199,7 @@ void LauncherGrid::build() {
 	_grid = new GridWidget(this, "LauncherGrid.IconArea");
 	// Populate the list
 	updateListing();
-	
+
 	// Restore last selection
 	String last(ConfMan.get("lastselectedgame", ConfigManager::kApplicationDomain));
 	selectTarget(last);

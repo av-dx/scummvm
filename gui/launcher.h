@@ -78,7 +78,7 @@ public:
 #ifndef DISABLE_LAUNCHERDISPLAY_GRID
 	virtual LauncherDisplayType getType() const = 0;
 #endif // !DISABLE_LAUNCHERDISPLAY_GRID
-	
+
 	int run();
 
 	void handleKeyDown(Common::KeyState state) override;
