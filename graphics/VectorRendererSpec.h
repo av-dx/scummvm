@@ -209,6 +209,9 @@ protected:
 	virtual void drawTriangleVertAlgClip(int x, int y, int w, int h,
 		bool inverted, PixelType color, FillMode fill_m);
 
+	virtual void drawTriangleHorAlg(int x, int y, int w, int h,
+	    bool inverted, PixelType color, FillMode fill_m);
+
 	virtual void drawTriangleFast(int x, int y, int size,
 	    bool inverted, PixelType color, FillMode fill_m);
 
